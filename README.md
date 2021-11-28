@@ -14,7 +14,7 @@
 https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml
 - 표정인식 학습결과 파일 -> 파일 다운 <br/> 
 https://mechasolution.vn/source/blog/AI-tutorial/Emotion_Recognition/emotion_model.hdf5 <br/> <br/> 
-
-python smileTest.py로 실행 결과 -> 아직까진 안됨 
-
 ***
+### ● 11월 28일 [표정인식 테스트 성공] <br/><br/>
+그러나 감정을 화남 슬픔 기쁨으로만 할 것인데 range에러가 남 
+
