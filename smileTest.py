@@ -58,14 +58,18 @@ while True:
             #zip : EMOTIONS리스트와 preds리스트의 값이 순서 쌍으로 묶음 ex)[(happy(EMOTIONS), 예측 값(preds))]
             #enumerate : 순서쌍을 열거
             #순서쌍 데이터에서 emotion=EMOTION, preds=preds 요소와 인덱스를 꺼내옴 
-            text = "{}: {:.2f}%".format(emotion, prob * 100)
-            #출력결과 -> happy: 35.05% 백분율 
+            text = "{}: {:.2f}%".format(emotion, prob * 100) #출력결과 -> happy: 35.05% 백분율 
             w = int(prob * 300)
             #표정 검출 데이터 창에서 예측된 값만큼 빨간 사각형으로 시각화하는 부분 
             cv2.rectangle(canvas, (7, (i * 35) + 5), (w, (i * 35) + 35), (0, 0, 255), -1)
             #표정 검출 데이터 창에서 예측된 값을 text로 출력하는 부분 
-            cv2.putText(canvas, text, (10, (i * 35) + 23), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 2)
+            cv2.putText(canvas, text, (10, (i * 35) + 23), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 2)      
 
+    label = EMOTIONS[preds.argmax()]
+    test = prob * 100
+    if(test >= 80):
+        print(label) #80넘는 측정 값만 나옴 
+        
     # Open two windows
     ## Display image ("Emotion Recognition")
     ## Display probabilities of emotion
@@ -73,8 +77,14 @@ while True:
     cv2.imshow("Probabilities", canvas)
     
     # q를 누르면 나가짐 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    k = cv2.waitKey(1) & 0xFF
+    if k == ord('q') or k == 27: #q또는 esc키 누를시 나감 
         break
+    elif k == ord('c'):  #preds != None은 사용 못할 듯 무조건 예측치 중 큰 값이 있기 때문에 
+        percent = max(preds)    # 표정 예측치 중 가장 큰 값
+        index = np.where(percent == preds)[0][0]    # 가장 큰 표정 예측치의 index 값 구하기
+        print(EMOTIONS[index], percent*100)
+        continue
 
 # Clear program and close windows
 camera.release()
