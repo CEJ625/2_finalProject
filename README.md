@@ -16,5 +16,9 @@ https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcas
 https://mechasolution.vn/source/blog/AI-tutorial/Emotion_Recognition/emotion_model.hdf5 <br/> <br/> 
 ***
 ### ● 11월 28일 [표정인식 테스트 성공] <br/><br/>
-그러나 감정을 화남 슬픔 기쁨으로만 할 것인데 range에러가 남 
+그러나 감정을 화남 슬픔 기쁨으로만 할 것인데 range에러가 남 -> 그냥 안 추리고 하기로 함 <br/><br/>
+***
+### ● 11월 30일 [표정인식 테스트 성공] <br/><br/>
+가장 예측값이 큰 값을 가져와서 출력해주는것 까지 성공 !!
+오늘 크롤링이랑 표정인식 이어야지 
 
