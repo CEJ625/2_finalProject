@@ -1,164 +1,2162 @@
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-import bs4
-import cv2
-import urllib.request
-import numpy as np   
-from keras.preprocessing.image import img_to_array
-from keras.models import load_model
-from sklearn.cluster import KMeans
-import pyperclip
-import time
+Python 3.8.6 (tags/v3.8.6:db45529, Sep 23 2020, 15:52:53) [MSC v.1927 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license()" for more information.
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 64.49897289276123
+Happy
 
-""" 얼굴 표정 추출 """
-# Face detection XML load and trained model loading
-face_detection = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-emotion_classifier = load_model('emotion_model.hdf5', compile=False)
-EMOTIONS = ["Angry" ,"Disgusting","Fearful", "Happy", "Sad", "Surpring", "Neutral"]
-preds = None
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
 
-# Video capture using webcam
-camera = cv2.VideoCapture(0)
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
 
-while True:
-    # Capture image from camera
-    ret, frame = camera.read()
-    
-    # Convert color to gray scale
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    
-    # Face detection in frame
-    faces = face_detection.detectMultiScale(gray,
-                                            scaleFactor=1.1,
-                                            minNeighbors=5,
-                                            minSize=(30,30))
-    
-    # Create empty image
-    canvas = np.zeros((250, 300, 3), dtype="uint8")
-    
-    # Perform emotion recognition only when face is detected
-    if len(faces) > 0:
-        # For the largest image
-        face = sorted(faces, reverse=True, key=lambda x: (x[2] - x[0]) * (x[3] - x[1]))[0]
-        (fX, fY, fW, fH) = face
-        # Resize the image to 48x48 for neural network
-        roi = gray[fY:fY + fH, fX:fX + fW]
-        roi = cv2.resize(roi, (48, 48))
-        roi = roi.astype("float") / 255.0
-        roi = img_to_array(roi)
-        roi = np.expand_dims(roi, axis=0)
-        
-        # Emotion predict
-        preds = emotion_classifier.predict(roi)[0]
-        emotion_probability = np.max(preds)
-        label = EMOTIONS[preds.argmax()]
-        
-        # Assign labeling
-        cv2.putText(frame, label, (fX, fY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
-        cv2.rectangle(frame, (fX, fY), (fX + fW, fY + fH), (0, 0, 255), 2)
- 
-        # Label printing
-        for (i, (emotion, prob)) in enumerate(zip(EMOTIONS, preds)):    # zip은 두 인자를 튜플쌍의 형태로 반환 (EMOTIONS값 1, preds값 1),(EMOTIONS값 2, preds값 2) 
-            text = "{}: {:.2f}%".format(emotion, prob * 100)    # 아마도 비율?
-            w = int(prob * 300)
-            cv2.rectangle(canvas, (7, (i * 35) + 5), (w, (i * 35) + 35), (0, 0, 255), -1)
-            cv2.putText(canvas, text, (10, (i * 35) + 23), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 2)
-        
-        
-    # Open two windows
-    ## Display image ("Emotion Recognition")
-    ## Display probabilities of emotion
-    cv2.imshow('Emotion Recognition', frame)
-    cv2.imshow("Probabilities", canvas)
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
 
-    time.sleep(0.1) # 프레임을 조금 낮춰주기 위함
-    
-    # q to quit
-    k = cv2.waitKey(1) & 0xFF
-    if k == ord('q') or k == 27:
-        break
-    if k == ord('c'):
-        percent = max(preds)    # 표정 예측치 중 가장 큰 값
-        index = np.where(percent == preds)[0][0]    # 가장 큰 표정 예측치의 index 값 구하기
-        print(EMOTIONS[index], percent*100)
-        break #c를 누르면 바로 나가짐 
-
-#플레이리스트의 이름과 비교해줄 것임    
-maxEmotion = EMOTIONS[index]
-print(maxEmotion)
-
-# Clear program and close windows
-camera.release()
-cv2.destroyAllWindows()
-
-# chromedriver.exe 위치 (chromedriver는 이 py 프로그램과 같은 폴더에 있어야 하고, 절대경로로 지정해야 함)
-driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
-driver.get("https://vibe.naver.com/today")
-
-
-# 광고 모달창 끄기 find_* 이게 그 요소
-driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
-
-""" 로그인 처리 """
-# 로그인박스 클릭하여 로그인 창으로 이동 -> 로그인 창으로 이동을 하고나서 로그인 돼 있는지 확인 
-driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
-
-    
-# 로그인 함수
-def login() :
-    while True :
-        id = input("당신의 네이버 아이디를 입력하세요 : ")
-        pyperclip.copy(id) #캡차를 피하기위한 작업
-        driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
-        time.sleep(0.5)
-
-        pw = input("당신의 네이버 패스워드를 입력하세요 : ")
-        pyperclip.copy(pw)
-        time.sleep(0.5)
-        driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
-
-        driver.find_element_by_id('log.login').click()
-        time.sleep(1)
-
-        # 로그인 성공여부에 따른 처리
-        try :
-            # 로그인 실패시 메세지가 생기기 때문에 그에 관련된 박스를 찾음
-            login_error = driver.find_element_by_css_selector('#err_common > div') 
-            print("로그인 실패", login_error.text) # 실패시 관련문제 알려주기
-            driver.find_element_by_id('id').clear() # 그전에 썻던 아이디 input창에서 지우기
-        except :
-            print("로그인 성공")
-            # 로그인 성공시 알려주고 아이디와 패스워드 등록여부 거절누르기
-            driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
-            time.sleep(2)
-            break
-
-# 혹시나 로그인 돼 있을 때 
-try :
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
     nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
-    print(nick_name.text , "님 안녕하세요")
-except :
-    login()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
 
-# 보관함 이동
-library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
 
-#보관함 -> 플레이리스트 이동
-playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
 
-#플레이리스트 이름 갖고오기 
-#li:nth-child() -> :nth-child()을 제거 해줘야 자식 요소들을 다 갖고 옴
-plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
 
-plist = []
-#text형식으로 plist에 플레이리스트 이름을 넣어줌
-for plist_name in plist_names:
-    plist.append(plist_name.text)
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
 
-#추출한 표정이 플레이리스트에 있는지 확인 없으면 "플레이리스트를 추가해주세요"
-if maxEmotion in plist:
-    print('리스트에 값이 있어요')
-else:
-    print('리스트에 값이 없어요')
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
 
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 144
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
 
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 147
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 151
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 있어요
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 164, in <module>
+    print(plist[idx])
+TypeError: list indices must be integers or slices, not str
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 76.2652575969696
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 144
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 147
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 151
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 있어요
+그 표정의 값은 Sad이고 이 표정의 인덱스 값은 0이다
+그 표정의 값은 기본 리스트이고 이 표정의 인덱스 값은 2이다
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 91.70691967010498
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 144
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 147
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 151
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 있어요
+그 표정의 값은 Sad이고 이 표정의 인덱스 값은 0이다
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 97.64120578765869
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 144
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 147
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 151
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 1이다
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 87, in <module>
+    maxEmotion = EMOTIONS[index]
+NameError: name 'index' is not defined
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Angry 49.586084485054016
+Angry
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 144
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 147
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 151
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 있어요
+그 표정의 값은 Angry이고 이 표정의 인덱스 값은 0이다
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 93.87405514717102
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 144
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 147
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 151
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 있어요
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 95.44965028762817
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 있어요
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Neutral 49.4393914937973
+Neutral
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 없어요
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 96.44830822944641
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 있어요
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 94.80634927749634
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+리스트에 값이 있어요
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 98.1130838394165
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 93.86423230171204
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 2이다
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 96.81692719459534
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 2이다
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 174
+    driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text').click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 174, in <module>
+    driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text').click()
+AttributeError: 'list' object has no attribute 'click'
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 95.96900939941406
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 2이다
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 95.75417041778564
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 2이다
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 175
+    driver.find_elements_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 175, in <module>
+    driver.find_elements_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+AttributeError: 'list' object has no attribute 'click'
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 97.18300700187683
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 2이다
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 175
+    random_play_btn = driver.find_elements_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 175, in <module>
+    random_play_btn = driver.find_elements_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+AttributeError: 'list' object has no attribute 'click'
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 95.55637836456299
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+[]
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 161, in <module>
+    plist.pop(-1) #무조건 마지막 기본 플레이리스트 이름 제거
+IndexError: pop from empty list
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Neutral 45.93185484409332
+Neutral
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156
+    random_play_btn = driver.find_element_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156, in <module>
+    random_play_btn = driver.find_element_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 520, in find_element_by_xpath
+    return self.find_element(by=By.XPATH, value=xpath)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 1244, in find_element
+    return self.execute(Command.FIND_ELEMENT, {
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 424, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 247, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"xpath","selector":"//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a"}
+  (Session info: chrome=96.0.4664.45)
+Stacktrace:
+Backtrace:
+	Ordinal0 [0x00F00C43+2493507]
+	Ordinal0 [0x00E9A4B1+2073777]
+	Ordinal0 [0x00DA2608+1058312]
+	Ordinal0 [0x00DCCAA4+1231524]
+	Ordinal0 [0x00DF6C62+1404002]
+	Ordinal0 [0x00DE597A+1333626]
+	Ordinal0 [0x00DF5038+1396792]
+	Ordinal0 [0x00DE580B+1333259]
+	Ordinal0 [0x00DC2314+1188628]
+	Ordinal0 [0x00DC316F+1192303]
+	GetHandleVerifier [0x01087BF6+1548950]
+	GetHandleVerifier [0x0113461C+2256060]
+	GetHandleVerifier [0x00F8C13B+518107]
+	GetHandleVerifier [0x00F8B1E0+514176]
+	Ordinal0 [0x00E9F53D+2094397]
+	Ordinal0 [0x00EA3418+2110488]
+	Ordinal0 [0x00EA3552+2110802]
+	Ordinal0 [0x00EACE81+2150017]
+	BaseThreadInitThunk [0x76CAFA29+25]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A9E+286]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A6E+238]
+
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 90.65608382225037
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156
+    random_play_btn = driver.find_element_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156, in <module>
+    random_play_btn = driver.find_element_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 520, in find_element_by_xpath
+    return self.find_element(by=By.XPATH, value=xpath)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 1244, in find_element
+    return self.execute(Command.FIND_ELEMENT, {
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 424, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 247, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"xpath","selector":"//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a"}
+  (Session info: chrome=96.0.4664.45)
+Stacktrace:
+Backtrace:
+	Ordinal0 [0x00F00C43+2493507]
+	Ordinal0 [0x00E9A4B1+2073777]
+	Ordinal0 [0x00DA2608+1058312]
+	Ordinal0 [0x00DCCAA4+1231524]
+	Ordinal0 [0x00DF6C62+1404002]
+	Ordinal0 [0x00DE597A+1333626]
+	Ordinal0 [0x00DF5038+1396792]
+	Ordinal0 [0x00DE580B+1333259]
+	Ordinal0 [0x00DC2314+1188628]
+	Ordinal0 [0x00DC316F+1192303]
+	GetHandleVerifier [0x01087BF6+1548950]
+	GetHandleVerifier [0x0113461C+2256060]
+	GetHandleVerifier [0x00F8C13B+518107]
+	GetHandleVerifier [0x00F8B1E0+514176]
+	Ordinal0 [0x00E9F53D+2094397]
+	Ordinal0 [0x00EA3418+2110488]
+	Ordinal0 [0x00EA3552+2110802]
+	Ordinal0 [0x00EACE81+2150017]
+	BaseThreadInitThunk [0x76CAFA29+25]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A9E+286]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A6E+238]
+
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 66.1694884300232
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156
+    random_play_btn = driver.find_element_by_css_selector('#content > div:nth-child(1) > div.summary_section > div.summary > div.option_area.only > div > div.play_option > span:nth-child(2) > a')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156, in <module>
+    random_play_btn = driver.find_element_by_css_selector('#content > div:nth-child(1) > div.summary_section > div.summary > div.option_area.only > div > div.play_option > span:nth-child(2) > a')
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 808, in find_element_by_css_selector
+    return self.find_element(by=By.CSS_SELECTOR, value=css_selector)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 1244, in find_element
+    return self.execute(Command.FIND_ELEMENT, {
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 424, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 247, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"css selector","selector":"#content > div:nth-child(1) > div.summary_section > div.summary > div.option_area.only > div > div.play_option > span:nth-child(2) > a"}
+  (Session info: chrome=96.0.4664.45)
+Stacktrace:
+Backtrace:
+	Ordinal0 [0x00F00C43+2493507]
+	Ordinal0 [0x00E9A4B1+2073777]
+	Ordinal0 [0x00DA2608+1058312]
+	Ordinal0 [0x00DCCAA4+1231524]
+	Ordinal0 [0x00DF6C62+1404002]
+	Ordinal0 [0x00DE597A+1333626]
+	Ordinal0 [0x00DF5038+1396792]
+	Ordinal0 [0x00DE580B+1333259]
+	Ordinal0 [0x00DC2314+1188628]
+	Ordinal0 [0x00DC316F+1192303]
+	GetHandleVerifier [0x01087BF6+1548950]
+	GetHandleVerifier [0x0113461C+2256060]
+	GetHandleVerifier [0x00F8C13B+518107]
+	GetHandleVerifier [0x00F8B1E0+514176]
+	Ordinal0 [0x00E9F53D+2094397]
+	Ordinal0 [0x00EA3418+2110488]
+	Ordinal0 [0x00EA3552+2110802]
+	Ordinal0 [0x00EACE81+2150017]
+	BaseThreadInitThunk [0x76CAFA29+25]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A9E+286]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A6E+238]
+
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 65.13381600379944
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156
+    random_play_btn = driver.find_element_by_css_selector('#content > div:nth-child(1) > div.summary_section > div.summary > div.option_area.only > div > div.play_option > span:nth-child(2) > a')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156, in <module>
+    random_play_btn = driver.find_element_by_css_selector('#content > div:nth-child(1) > div.summary_section > div.summary > div.option_area.only > div > div.play_option > span:nth-child(2) > a')
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 808, in find_element_by_css_selector
+    return self.find_element(by=By.CSS_SELECTOR, value=css_selector)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 1244, in find_element
+    return self.execute(Command.FIND_ELEMENT, {
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 424, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 247, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"css selector","selector":"#content > div:nth-child(1) > div.summary_section > div.summary > div.option_area.only > div > div.play_option > span:nth-child(2) > a"}
+  (Session info: chrome=96.0.4664.45)
+Stacktrace:
+Backtrace:
+	Ordinal0 [0x00F00C43+2493507]
+	Ordinal0 [0x00E9A4B1+2073777]
+	Ordinal0 [0x00DA2608+1058312]
+	Ordinal0 [0x00DCCAA4+1231524]
+	Ordinal0 [0x00DF6C62+1404002]
+	Ordinal0 [0x00DE597A+1333626]
+	Ordinal0 [0x00DF5038+1396792]
+	Ordinal0 [0x00DE580B+1333259]
+	Ordinal0 [0x00DC2314+1188628]
+	Ordinal0 [0x00DC316F+1192303]
+	GetHandleVerifier [0x01087BF6+1548950]
+	GetHandleVerifier [0x0113461C+2256060]
+	GetHandleVerifier [0x00F8C13B+518107]
+	GetHandleVerifier [0x00F8B1E0+514176]
+	Ordinal0 [0x00E9F53D+2094397]
+	Ordinal0 [0x00EA3418+2110488]
+	Ordinal0 [0x00EA3552+2110802]
+	Ordinal0 [0x00EACE81+2150017]
+	BaseThreadInitThunk [0x76CAFA29+25]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A9E+286]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A6E+238]
+
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 82.58349299430847
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156
+    random_play_btn = driver.find_element_by_css_selector('#content > div:nth-child(1) > div.summary_section > div.summary > div.option_area.only > div > div.play_option > span:nth-child(2) > a')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 156, in <module>
+    random_play_btn = driver.find_element_by_css_selector('#content > div:nth-child(1) > div.summary_section > div.summary > div.option_area.only > div > div.play_option > span:nth-child(2) > a')
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 808, in find_element_by_css_selector
+    return self.find_element(by=By.CSS_SELECTOR, value=css_selector)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 1244, in find_element
+    return self.execute(Command.FIND_ELEMENT, {
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 424, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 247, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"css selector","selector":"#content > div:nth-child(1) > div.summary_section > div.summary > div.option_area.only > div > div.play_option > span:nth-child(2) > a"}
+  (Session info: chrome=96.0.4664.45)
+Stacktrace:
+Backtrace:
+	Ordinal0 [0x00F00C43+2493507]
+	Ordinal0 [0x00E9A4B1+2073777]
+	Ordinal0 [0x00DA2608+1058312]
+	Ordinal0 [0x00DCCAA4+1231524]
+	Ordinal0 [0x00DF6C62+1404002]
+	Ordinal0 [0x00DE597A+1333626]
+	Ordinal0 [0x00DF5038+1396792]
+	Ordinal0 [0x00DE580B+1333259]
+	Ordinal0 [0x00DC2314+1188628]
+	Ordinal0 [0x00DC316F+1192303]
+	GetHandleVerifier [0x01087BF6+1548950]
+	GetHandleVerifier [0x0113461C+2256060]
+	GetHandleVerifier [0x00F8C13B+518107]
+	GetHandleVerifier [0x00F8B1E0+514176]
+	Ordinal0 [0x00E9F53D+2094397]
+	Ordinal0 [0x00EA3418+2110488]
+	Ordinal0 [0x00EA3552+2110802]
+	Ordinal0 [0x00EACE81+2150017]
+	BaseThreadInitThunk [0x76CAFA29+25]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A9E+286]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A6E+238]
+
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 81.01840615272522
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 86.79105639457703
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 2이다
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 92.96653866767883
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 2이다
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 173
+    random_play_btn = driver.find_element_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a.btn_shuffle').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+Traceback (most recent call last):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 173, in <module>
+    random_play_btn = driver.find_element_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a.btn_shuffle').click()
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 520, in find_element_by_xpath
+    return self.find_element(by=By.XPATH, value=xpath)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 1244, in find_element
+    return self.execute(Command.FIND_ELEMENT, {
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 424, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\조은지\AppData\Local\Programs\Python\Python38\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 247, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"xpath","selector":"//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a.btn_shuffle"}
+  (Session info: chrome=96.0.4664.45)
+Stacktrace:
+Backtrace:
+	Ordinal0 [0x00F00C43+2493507]
+	Ordinal0 [0x00E9A4B1+2073777]
+	Ordinal0 [0x00DA2608+1058312]
+	Ordinal0 [0x00DCCAA4+1231524]
+	Ordinal0 [0x00DF6C62+1404002]
+	Ordinal0 [0x00DE597A+1333626]
+	Ordinal0 [0x00DF5038+1396792]
+	Ordinal0 [0x00DE580B+1333259]
+	Ordinal0 [0x00DC2314+1188628]
+	Ordinal0 [0x00DC316F+1192303]
+	GetHandleVerifier [0x01087BF6+1548950]
+	GetHandleVerifier [0x0113461C+2256060]
+	GetHandleVerifier [0x00F8C13B+518107]
+	GetHandleVerifier [0x00F8B1E0+514176]
+	Ordinal0 [0x00E9F53D+2094397]
+	Ordinal0 [0x00EA3418+2110488]
+	Ordinal0 [0x00EA3552+2110802]
+	Ordinal0 [0x00EACE81+2150017]
+	BaseThreadInitThunk [0x76CAFA29+25]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A9E+286]
+	RtlGetAppContainerNamedObjectPath [0x77BD7A6E+238]
+
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 98.03599715232849
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 2이다
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 174
+    random_play_btn = driver.find_element_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+>>> 
+============== RESTART: C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py ==============
+Happy 94.60691809654236
+Happy
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 95
+    driver = webdriver.Chrome(r"C:/testp/chromedriver.exe")
+DeprecationWarning: executable_path has been deprecated, please pass in a Service object
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 100
+    driver.find_elements_by_xpath('//*[@id="app"]/div[2]/div/div/a[2]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 104
+    driver.find_elements_by_xpath('//*[@id="header"]/div[1]/div[1]/a')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 138
+    nick_name = driver.find_element_by_css_selector('#header > div.my_menu > div.profile_area > div > a > div.nickname')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 아이디를 입력하세요 : lovecho8899
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 112
+    driver.find_element_by_id('id').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+당신의 네이버 패스워드를 입력하세요 : !@a1z2609625
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 118
+    driver.find_element_by_id('pw').send_keys(Keys.CONTROL + 'v')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 120
+    driver.find_element_by_id('log.login').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 126
+    login_error = driver.find_element_by_css_selector('#err_common > div')
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+로그인 성공
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 132
+    driver.find_elements_by_xpath('//*[@id="new.dontsave"]')[0].click()
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 146
+    library_btn = driver.find_element_by_xpath('//*[@id="header"]/div[1]/div[3]/div/div[2]/ul/li[7]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 149
+    playlist_btn = driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div[1]/ul/li[5]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 153
+    plist_names = driver.find_elements_by_css_selector('#content > div > div.sub_list.playlists > ul > li > div > div.info > a > span.text')
+DeprecationWarning: find_elements_by_* commands are deprecated. Please use find_elements() instead
+['Angry', 'Sad', 'Happy', '기본 리스트']
+리스트에 값이 있어요
+그 표정의 값은 Happy이고 이 표정의 인덱스 값은 2이다
+
+Warning (from warnings module):
+  File "C:\Users\조은지\Desktop\무선네트워크\기말고사\total.py", line 174
+    random_play_btn = driver.find_element_by_xpath('//*[@id="content"]/div[1]/div[1]/div[2]/div[2]/div/div[1]/span[2]/a').click()
+DeprecationWarning: find_element_by_* commands are deprecated. Please use find_element() instead
+>>> 
