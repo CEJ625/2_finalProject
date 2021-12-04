@@ -96,16 +96,41 @@
 <ol> 8) 캔버스(표정 검출 데이터 창)에 라벨링한다
 <ul>  zip()함수로 EMOTIONS배열과 preds의 값을 순서 쌍으로 묶음 ex)[(happy(EMOTIONS배열), 예측 값(preds))]</ul>
 <ul>  enumerate()함수로 순서쌍을 열거한다.</ul>
-<ul>  for문으로 순서쌍 데이터를  emotion = EMOTION, preds = prob로 꺼내옴 </ul></ul>
+<ul>  for문으로 순서쌍 데이터를  emotion = EMOTION, preds = prob로 꺼내옴 </ul>
 <ul>  text변수에 "happy : 35.05%"식으로 emotion과 예측값*100을 해주어 넣어준다 </ul>
 <ul>  표정 검출 데이터 창인 캔버스에 text를 넣어주고 , 각각 표정을 예측한 값만큼 사각형으로 시각화 해준다. </ul>
 <ul>  imshow()함수로 프레임과 캔버스창에 텍스트를 지정 </ul>
 <ul>  사용자가 키보드 "q"를 누르면 그냥 프로그램이 break문으로 빠져나오고 </ul>
 <ul>  특정 표정 예측값이 클 때 "c"를 누르면 그 표정 값을 가져오고 표정 인식은 break문으로 빠져나온다  </ul> 
 <ul>  추후에 표정값과 같은 플레이리스트를 불러오기 위해 maxEmotion = EMOTIONS[index]를 해준다 </ul></ol>
-</ol></br>
-<hr>
+</ol></br></br>
 
+<ol><img width="786" alt="crawlingCode1" src="https://user-images.githubusercontent.com/80368992/144708639-df4c5356-c60b-45f5-9334-9d95126a0311.PNG"></br></br>
+<ul>1) chromedriver.exe를 로컬에서 불러오고 get()함수로 vibe사이트를 띄운다.</ul>
+<ul>find_elements_by_xpath() 함수를 사용하여 vibe사이트를 띄울 때 나타나는 모달창을 꺼준다</ul>
+    <ul>※ 웹사이트에서 xpath가져오는 방법 :  f12를 눌러 개발자 도구를 열어 Ctrl+Shift+c로 가져올 요소를 선택해준다
+    선택후 우클릭으로 Xpath를 복사해준다 </ul></ul></br>
+<ul>2) 동일한 방법으로 로그인 박스를 클릭하여 로그인창으로 이동하도록 한다</ul>
+<ul>    try-except문으로 로그인 돼 있을 경우는"***님 안녕하세요"를 출력해주고 아닌경우 login함수를 호출한다. </ul>
+<ul>    사용자가 입력한 아이디를 id변수에 넣고 copy()함수로 클립보드에 id를 복사해준다</ul>
+<ul>    find_element_by_id로 "id"라는 id를 갖은 요소를 가져오고 send_keys()함수로 id 값을 넣어준다 </ul>
+<ul>    패스워드도 동일한 방법으로 해주고 로그인 버튼을 누른다 </ul></br></br>
 
+<ul>3) 만약 로그인에 실패할 경우 -> 로그인 실패시 메세지가 생기기 때문에 그에 관련된 박스를 찾아온다 </ul> 
+<ul>   login_error.text으로 로그인 실패 원인을 알려준다 (아이디나 패스워드 오류) </ul>
+<ul>   clear()함수로 로그인창에 있던 id를 지워준다 </ul>
+<ul>   로그인 성공 시 -> 로그인 성공시 알려주고 아이디와 패스워드 등록여부를 거절한다 </ul>
+</ol></br></br>
 
+<ol><img width="899" alt="crawlingCode2" src="https://user-images.githubusercontent.com/80368992/144708640-ec9a02dd-8a55-4228-b64e-f49a00fee2ad.PNG">
+<ul>4) 1)번과 같은 방식으로 driver.find_element_by_xpath을 사용하여 보관함으로 이동하고 플레이리스트로 이동한다</ul>
+<ul>   플레이리스트에서 이름을 갖고 와야 하는데 li:nth-child()이런식으로 돼 있다  </ul>
+<ul>   :nth-child()을 제거하여 자식 요소들을 모두 갖고온다 driver.find_elements_by_css_selector는 list형식으로 값이 반환이 된다</ul>
+<ul>   이 플레이리스에는 맨 앞과 맨 뒤는 필요없는 리스트가 있기에 이것을 제거하기 위해 plist 배열을 따로 만들어 준다 </ul>
+<ul>   for문으로 plist_names에 있는 값을 plist_name으로 꺼내오고 plist 배열에 플레이리스트 값들을 text형식으로 append해준다</ul>
+<ul></ul>
+<ul></ul>
+<ul></ul>
+<ul></ul>
+<ul></ul></ol>
 
